@@ -6,7 +6,7 @@ now=`date +%s`
 
 if [ ! -d "$DIR" ]; then
   mkdir "$DIR"
-  touch "$DIR/session.log"
+  touch "$DIR/sessions.log"
   chmod -R 770 "$DIR"
 fi
 
