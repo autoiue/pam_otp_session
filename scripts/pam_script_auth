@@ -1,0 +1,76 @@
+#!/bin/sh
+
+DIR="$( cd "$(dirname "$0")" ; pwd -P )/.sessions"		# session files dir
+TMO=1000	# in sec
+now=`date +%s`
+
+if [ ! -d "$DIR" ]; then
+  mkdir "$DIR"
+  touch "$DIR/session.log"
+  chmod -R 770 "$DIR"
+fi
+
+# check if we know the user
+if [ -f "$DIR/$PAM_USER.s" ]
+then
+	
+	# if we know him, we get it's last auth infos
+	exec 5< "$DIR/$PAM_USER.s"
+	while   read line <&5 ; do
+        	last_log=$line
+        	read last_otp <&5
+        	read lock <&5
+	done
+	exec 5<&-
+
+        # we compute the hash of the current auth tokens
+        current_otp=`echo -n $PAM_AUTHTOK | openssl whirlpool`
+
+	# if the user is currently locked, we continue to normal auth procedure
+	if [ "$lock" == "locked" ]
+	then
+		echo "$now> $PAM_USER locked" >> $DIR/sessions.log
+		
+                echo $last_log    >  $DIR/$PAM_USER.s
+                echo $current_otp >> $DIR/$PAM_USER.s
+                echo "locked"     >> $DIR/$PAM_USER.s
+
+		exit 1
+	fi
+
+	# we compute the time since the last successful auth	
+	let "diff = $now - $last_log"
+	# if it's greater than the fixed timeout, we continue to normal auth procedure
+        if [ "$diff" -ge "$TMO" ]
+        then
+                echo "$now> Lock $PAM_USER (timed out)" >> $DIR/sessions.log
+               
+                echo $last_log    >  $DIR/$PAM_USER.s
+                echo $current_otp >> $DIR/$PAM_USER.s
+                echo "locked"     >> $DIR/$PAM_USER.s
+ 
+		exit 1
+        fi
+
+	# if the tokens are the same as the last successful auth, we grant access
+	if [ "$current_otp" == "$last_otp" ]
+	then		
+                echo "$now> Granted $PAM_USER (using previous token)" >> $DIR/sessions.log
+
+                exit 0
+
+	# otherwise we continue to normal auth procedure
+	else
+		echo "$now> Refused $PAM_USER (invalid previous token)" >> $DIR/sessions.log
+
+                echo $last_log    >  $DIR/$PAM_USER.s
+                echo $current_otp >> $DIR/$PAM_USER.s
+                echo "locked"     >> $DIR/$PAM_USER.s
+
+                exit 1
+	fi
+# if we don't know the user, we continue to normal auth procedure
+else
+	echo "$now> $PAM_USER not registered" >> $DIR/sessions.log
+	exit 1 
+fi

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# if we get here, the authentification was successful
+
+DIR="$( cd "$(dirname "$0")" ; pwd -P )/.sessions"              # session files dir
+now=`date +%s`
+
+if [ -f "$DIR/$PAM_USER.s" ]
+then
+	exec 5< $DIR/$PAM_USER.s
+	while   read line <&5 ; do
+		last_log=$line
+        	read last_otp <&5
+        	read lock <&5
+  	done
+        exec 5<&-
+	echo "$now> $PAM_USER unlocked" >> $DIR/sessions.log
+else
+	last_otp=''
+	touch "$DIR/$PAM_USER.s"
+	chmod 770 "$DIR/$PAM_USER.s"
+	echo "$now> $PAM_USER created" >> $DIR/sessions.log
+fi
+
+echo $now 	>  $DIR/$PAM_USER.s
+echo $last_otp 	>> $DIR/$PAM_USER.s
+echo "unlocked" >> $DIR/$PAM_USER.s
+
+exit 0
