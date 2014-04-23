@@ -1,6 +1,12 @@
-auth    sufficient     pam_script.so dir=/path/to/pam_otp_session/
-# here an example using Yubiko OTPs
-auth    required       pam_yubico.so try_first_pass id=16 authfile=/path/to/authorized_yubikeys url=https://api.yubico.com/wsapi/2.0/verify?id=%d&otp=%s
-# put here further authentification (against database, unix password system, etc)
+# first call the the scripts, set to 'auth sufficient'
+auth    sufficient      pam_script.so dir=/path/to/pam_otp_session/
 
-account sufficient     pam_script.so dir=/path/to/pam_otp_session/
+# begin normal two factor authentification (with Yubico OTP here)
+auth    required        pam_yubico.so try_first_pass id=16 authfile=/path/to/authorized_yubikeys url=https://api.yubico.com/wsapi/2.0/verify?id=%d&otp=%s
+#auth   required        [put here further authentification]
+#auth   required        (against database, unix password system, etc)
+#auth   required        ...
+# ed normal two factor authentification
+
+# second call if auth succeed, set to 'account sufficient' (sufficient or whatever)
+account sufficient      pam_script.so dir=/path/to/pam_otp_session/

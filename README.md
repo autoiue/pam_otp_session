@@ -3,7 +3,7 @@ This set of script allow PAM to remember that an user is already successfully au
 
 ## Installation
 
-Make sure you have the `pam_script.so` available on your system. You can get it on Debian-like-systems by installing the `libpam-script` package or by compiling it from this Github repo : [jeroennijhof/pam_script](https://github.com/jeroennijhof/pam_script)
+Make sure you have the `pam_script.so` available on your system. You can get it on Debian-like-systems by installing the `libpam-script` package or by compiling it from this Github repo : [jeroennijhof/pam_script](https://github.com/jeroennijhof/pam_script).
 
 Put the two scripts contained in `scripts` in a folder. Then point `pam_script.so` to it in your auth description in `/etc/pam.d/`, as `auth sufficient` then to `account sufficient`, as shown in the example : 
 
@@ -24,10 +24,14 @@ account	sufficient		pam_script.so dir=/path/to/pam_otp_session/
 
 And you're good.
 
+## Usage examples
+
+Works well with Nginx ([ngx_http_auth_pam_module](http://web.iti.upv.es/~sto/nginx/)) or with Postfix and Dovecot.
+
 ## Problems ?
 
 Open an issue !
 
 Should be good using Google Auth and other OTP providers, otherwise, open an issue !
 
-(Problems with Yubico PAM module ? [Yubico/yubico-pam](https://github.com/Yubico/yubico-pam))
+(Problems with Yubico PAM module ? [Yubico/yubico-pam](https://github.com/Yubico/yubico-pam).)
